@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Session } from 'next-auth'
 import { useSession } from 'next-auth/react'
