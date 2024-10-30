@@ -1,10 +1,10 @@
-// src/app/api/auth/[...nextauth]/route.ts
-import NextAuth, { NextAuthOptions, User } from 'next-auth'
+// src/lib/auth.ts
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { PrismaClient } from "@prisma/client"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcrypt"
-import { JWT } from 'next-auth/jwt'
+import { NextAuthOptions } from "next-auth"
+import type { User } from "next-auth"
 
 const prisma = new PrismaClient()
 
@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials, req): Promise<User | null> {
+      async authorize(credentials): Promise<User | null> {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Invalid credentials');
         }
@@ -41,36 +41,29 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        // Ensure role is always defined
-        const userWithRole: User = {
+        return {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role || 'CANDIDATE' // Provide default role if undefined
+          role: user.role,
         };
-
-        return userWithRole;
       }
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.id = user.id
+        token.role = user.role
       }
-      // Ensure role is always defined in token
-      if (!token.role) {
-        token.role = 'CANDIDATE';
-      }
-      return token;
+      return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+        session.user.id = token.id
+        session.user.role = token.role
       }
-      return session;
+      return session
     }
   },
   pages: {
@@ -82,7 +75,3 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 }
-
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
